@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>🌿 Virtual Herbal Garden</title>
+<style>
+  :root{
+    --bg:#e8f5e9; --card:#ffffff; --text:#1b5e20; --accent:#2e7d32;
+  }
+  body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,'Poppins',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;}
+  body.dark{--bg:#0f1720;--card:#0b1220;--text:#e6f4ea;}
+
+  /* --- LOGIN --- */
+  #loginPage{height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#b2f2bb,#dcedc1);}
+  .login-box{background:rgba(255,255,255,0.92);padding:28px;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,0.12);width:320px;text-align:center;}
+  .login-box input{width:86%;padding:10px;margin:8px;border-radius:8px;border:1px solid #c7e0cb;}
+  .login-box button{padding:10px 18px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;}
+
+  /* --- HEADER --- */
+  header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:linear-gradient(90deg,#156233, #2e7d32);color:#fff;position:relative;}
+  header h1{margin:0;font-size:1.1rem;}
+  .controls{display:flex;gap:8px;align-items:center;}
+  .controls input[type="text"]{padding:8px;border-radius:8px;border:none;width:220px;}
+  .btn{padding:8px 12px;background:rgba(255,255,255,0.12);border-radius:8px;color:#fff;border:none;cursor:pointer;}
+
+  /* --- hero --- */
+  .hero{height:36vh;display:flex;align-items:center;justify-content:center;position:relative;
+  background-image:url('https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1600&q=80');
+  background-size:cover;color:#fff;text-align:center;}
+  .hero .card{background:rgba(0,0,0,0.45);padding:20px;border-radius:14px;backdrop-filter: blur(4px);}
+
+  /* floating leaves, butterflies, rain */
+  .floating{position:absolute;pointer-events:none;}
+  .leaf{position:absolute;width:36px;opacity:0.9;animation:leafFall linear infinite;}
+  @keyframes leafFall{0%{transform:translateY(-20vh) rotate(0deg);opacity:1;}100%{transform:translateY(110vh) rotate(360deg);opacity:0;}}
+  .butterfly{position:absolute;width:44px;opacity:0.95;animation:butterfly 12s infinite;}
+  @keyframes butterfly{0%{transform:translate(0,0) rotate(-10deg);}50%{transform:translate(120px,-80px) rotate(10deg);}100%{transform:translate(0,0) rotate(-10deg);}}
+  .raindrop{position:absolute;top:-10vh;width:2px;height:18px;background:linear-gradient(#bfe7d5,#7fd6a8);opacity:0.6;animation:raindrop linear infinite;}
+  @keyframes raindrop{0%{transform:translateY(-10vh);opacity:1;}100%{transform:translateY(110vh);opacity:0;}}
+
+  /* --- plant grid --- */
+  .container{padding:20px;max-width:1200px;margin:0 auto;}
+  .toprow{display:flex;gap:12px;align-items:center;justify-content:flex-end;margin-bottom:12px;}
+  .plants-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:10px;}
+  .card{background:var(--card);border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,0.08);overflow:hidden;cursor:pointer;transition:transform .45s, box-shadow .3s;transform-style:preserve-3d;padding-bottom:10px;}
+  .card:hover{transform:scale(1.06) rotateY(12deg);box-shadow:0 18px 40px rgba(0,0,0,0.18);}
+  .card img{width:100%;height:150px;object-fit:cover;display:block;border-bottom:1px solid rgba(0,0,0,0.06);}
+  .card .meta{padding:10px;text-align:center;}
+  .small-btn{padding:6px 10px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer;margin:6px 4px;}
+
+  /* modal */
+  #modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.72);z-index:80;padding:18px;}
+  .modal-box{width:900px;max-width:95%;background:var(--card);color:var(--text);border-radius:12px;padding:18px;box-shadow:0 30px 60px rgba(0,0,0,0.35);overflow:auto;}
+  .modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .modal-grid img{width:100%;height:280px;object-fit:cover;border-radius:8px;}
+  .muted{opacity:0.7}
+
+  /* chatbot */
+  #chatbotBtn{position:fixed;right:18px;bottom:18px;z-index:90;background:linear-gradient(180deg,#2e7d32,#1b5e20);color:#fff;border:none;padding:12px 14px;border-radius:50px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,0.2);}
+  #chatWindow{position:fixed;right:18px;bottom:78px;width:320px;background:var(--card);border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,0.3);overflow:hidden;display:none;z-index:90;}
+  #chatHeader{background:var(--accent);color:#fff;padding:8px 12px;}
+  #chatArea{height:300px;padding:10px;overflow:auto;background:linear-gradient(180deg, rgba(0,0,0,0.02), transparent);}
+  #chatInput{display:flex;border-top:1px solid rgba(0,0,0,0.06);}
+  #chatInput input{flex:1;padding:10px;border:none;}
+  #chatInput button{padding:8px 10px;border:none;background:var(--accent);color:#fff;cursor:pointer;}
+
+  footer{padding:18px;text-align:center;color:#666;margin-top:40px;}
+
+  @media (max-width:600px){
+    .modal-grid{grid-template-columns:1fr;}
+    .hero{height:28vh;}
+    header .controls input{width:120px;}
+  }
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="loginPage">
+  <div class="login-box">
+    <h2>🌿 Virtual Herbal Garden</h2>
+    <input id="nameInput" placeholder="Enter your name" />
+    <div style="margin-top:8px;">
+      <button onclick="doLogin()">Enter Garden</button>
+      <button onclick="doDemo()">Demo</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN HEADER -->
+<header style="display:none;" id="mainHeader">
+  <h1>🌿 Virtual Herbal Garden</h1>
+  <div class="controls">
+    <input id="search" placeholder="Search plants..." oninput="filterPlants()" />
+    <button class="btn" onclick="toggleMusic()">🎵</button>
+    <button class="btn" onclick="toggleDark()">🌙</button>
+    <button class="btn" onclick="startVoiceSearch()">🎤</button>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero" id="hero" style="display:none;">
+  <div class="card">
+    <h2 id="welcomeText">Welcome to the Virtual Herbal Garden</h2>
+    <p>Explore plants, watch videos, hear audio descriptions. Use the chatbot for help.</p>
+  </div>
+  <div class="floating" id="floatingContainer"></div>
+</section>
+
+<!-- MAIN CONTENT -->
+<main class="container" id="mainContent" style="display:none;">
+  <div class="toprow">
+    <div style="flex:1"></div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn" onclick="openAllPages()">Open All Pages</button>
+      <button class="btn" onclick="toggleRain()">🌧️ Toggle Rain</button>
+      <button class="btn" onclick="toggleButterflies()">🦋 Toggle Butterflies</button>
+    </div>
+  </div>
+
+  <div class="plants-grid" id="plantsGrid"></div>
+</main>
+
+<!-- MODAL -->
+<div id="modal" onclick="closeModal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h3 id="mName"></h3>
+      <div>
+        <button class="small-btn" onclick="openPlantPage()">Open page</button>
+        <button class="small-btn" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+
+    <div class="modal-grid">
+      <div><img id="mImage" src=""></div>
+      <div>
+        <p><b>Scientific:</b> <span id="mSci"></span></p>
+        <p><b>Uses:</b> <span id="mUses"></span></p>
+        <p id="mDesc"></p>
+
+        <div style="margin-top:10px;">
+          <button class="small-btn" onclick="speakCurrent()">🔊 Hear Description</button>
+          <button class="small-btn" id="playVidBtn">▶ Watch Video</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;">
+      <iframe id="mVideo" src="" frameborder="0" allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
+
+<!-- CHATBOT -->
+<button id="chatbotBtn" onclick="toggleChat()">💬 Chat</button>
+<div id="chatWindow">
+  <div id="chatHeader">Garden Assistant</div>
+  <div id="chatArea"></div>
+  <div id="chatInput">
+    <input id="chatText" placeholder="Ask about a plant..." />
+    <button onclick="sendChat()">Send</button>
+  </div>
+</div>
+
+<!-- BACKGROUND MUSIC -->
+<audio id="bgMusic" src="https://cdn.pixabay.com/audio/2022/03/15/audio_0fe5b07c67.mp3" loop></audio>
+
+<footer>© 2025 Virtual Herbal Garden</footer>
+
+<script>
+
+/* -------------------- Plant Data -------------------- */
+const plants = [
+{
+  name:"Tulsi",
+  scientific:"Ocimum tenuiflorum",
+  uses:"Immunity booster, cough relief",
+  image:"IMG-20250925-WA0032.jpg",
+
+  /* ✅ CORRECT YOUTUBE EMBED LINK */
+  video:"https://www.youtube.com/embed/h0b-hK9-oqE",
+
+  description:"Tulsi is a sacred herb used to boost immunity, reduce stress and treat coughs."
+},
+
+
+  {name:"Neem", scientific:"Azadirachta indica", uses:"Antibacterial, skin purifier", image:"IMG-20250925-WA0036.jpg", video:"https://www.youtube.com/embed/q-3Ygq1P4pE", description:"Neem has strong antibacterial properties useful for skin and dental care."},
+  {name:"Aloe Vera", scientific:"Aloe barbadensis", uses:"Skin healing, digestion", image:"IMG-20250925-WA0038.jpg", video:"https://www.youtube.com/embed/1Uovn7PWjBk", description:"Aloe Vera gel soothes burns, accelerates wound healing and supports digestion."},
+  {name:"Ashwagandha", scientific:"Withania somnifera", uses:"Stress relief, energy", image:"61993QNH2FL._AC_UF350,350_QL80_.jpg", video:"https://www.youtube.com/embed/W_539qjTc1A", description:"Ashwagandha helps reduce stress and improve stamina and sleep."},
+  {name:"Turmeric", scientific:"Curcuma longa", uses:"Anti-inflammatory", image:"IMG-20250925-WA0035.jpg", video:"https://www.youtube.com/embed/oYExCcKl950", description:"Turmeric contains curcumin, a powerful anti-inflammatory and antioxidant."},
+  {name:"Amla", scientific:"Phyllanthus emblica", uses:"Vitamin C, immunity", image:"IMG-20250925-WA0037.jpg", video:"https://www.youtube.com/embed/MpYt0Dw61Ak", description:"Amla is rich in Vitamin C; it boosts immunity and improves skin and hair health."},
+  {name:"Peppermint", scientific:"Mentha piperita", uses:"Digestive aid, aroma", image:"51YTcDxv4yL.jpg", video:"https://www.youtube.com/embed/g3sM63dl1fo", description:"Peppermint soothes digestive problems and provides a refreshing aroma."},
+  {name:"Ginger", scientific:"Zingiber officinale", uses:"Nausea, digestion", image:"Ginger.webp", video:"https://www.youtube.com/embed/GTtkdK-MJpM", description:"Ginger helps with nausea, digestion and has anti-inflammatory effects."}
+];
+
+let currentModalIndex = null;
+let rainEnabled = false;
+let butterfliesEnabled = false;
+
+/* -------------------- Login -------------------- */
+function doLogin(){
+  const name=document.getElementById('nameInput').value.trim();
+  if(!name){alert("Please enter your name"); return;}
+  openGarden(name);
+}
+
+function openGarden(name){
+  document.getElementById('loginPage').style.display="none";
+  document.getElementById('mainHeader').style.display="flex";
+  document.getElementById('hero').style.display="block";
+  document.getElementById('mainContent').style.display="block";
+  document.getElementById('welcomeText').innerText = `Welcome ${name} to the Virtual Herbal Garden 🌿`;
+  loadGrid();
+  launchFloatingElements();
+}
+
+/* -------------------- Grid -------------------- */
+function loadGrid(){
+  const grid=document.getElementById('plantsGrid');
+  grid.innerHTML="";
+  plants.forEach((p,i)=>{
+    const div=document.createElement('div');
+    div.className="card";
+    div.innerHTML = `
+      <img src="${p.image}" alt="${p.name}">
+      <div class="meta">
+        <h3>${p.name}</h3>
+        <p><em>${p.scientific}</em></p>
+        <button class="small-btn" onclick="openModal(event,${i})">Details</button>
+        <button class="small-btn" onclick="speakPlant(event,${i})">🔊</button>
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+/* -------------------- Modal -------------------- */
+function openModal(ev,i){
+  ev.stopPropagation();
+  currentModalIndex=i;
+  const p = plants[i];
+
+  document.getElementById('mName').innerText=p.name;
+  document.getElementById('mImage').src=p.image;
+  document.getElementById('mSci').innerText=p.scientific;
+  document.getElementById('mUses').innerText=p.uses;
+  document.getElementById('mDesc').innerText=p.description;
+
+  document.getElementById('mVideo').src="";
+
+  document.getElementById('playVidBtn').onclick = ()=> {
+    document.getElementById('mVideo').src = p.video;
+  };
+
+  document.getElementById('modal').style.display="flex";
+}
+
+function closeModal(){
+  document.getElementById('modal').style.display="none";
+  document.getElementById('mVideo').src="";
+}
+
+/* -------------------- Separate page -------------------- */
+function openPlantPage(){
+  if(currentModalIndex===null) return;
+
+  const p = plants[currentModalIndex];
+  const w = window.open("","_blank");
+
+  w.document.write(`
+    <html><head><title>${p.name}</title></head>
+    <body style="font-family:Arial;padding:20px;">
+    <h1>${p.name}</h1>
+    <h3><em>${p.scientific}</em></h3>
+    <img src="${p.image}" style="max-width:100%;border-radius:8px;">
+    <p><b>Uses:</b> ${p.uses}</p>
+    <p>${p.description}</p>
+    <iframe width="560" height="315" src="${p.video}" frameborder="0" allowfullscreen></iframe>
+    </body></html>
+  `);
+}
+
+/* -------------------- Voice / TTS -------------------- */
+function speakPlant(ev,i){
+  ev.stopPropagation();
+  const p = plants[i];
+  speakText(`${p.name}. ${p.description}`);
+}
+
+function speakCurrent(){
+  if(currentModalIndex===null) return;
+  const p = plants[currentModalIndex];
+  speakText(`${p.name}. ${p.description}`);
+}
+
+function speakText(text){
+  if(!('speechSynthesis' in window)){ return; }
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate=0.95; u.pitch=1; u.lang="en-US";
+  window.speechSynthesis.speak(u);
+}
+
+/* -------------------- Search -------------------- */
+function filterPlants(){
+  const q=document.getElementById('search').value.toLowerCase();
+  document.querySelectorAll('.card').forEach(card=>{
+    card.style.display = card.innerText.toLowerCase().includes(q) ? "block" : "none";
+  });
+}
+
+/* -------------------- Background Music -------------------- */
+function toggleMusic(){
+  const m=document.getElementById('bgMusic');
+  m.paused ? m.play() : m.pause();
+}
+
+/* -------------------- Dark Mode -------------------- */
+function toggleDark(){
+  document.body.classList.toggle("dark");
+}
+
+/* -------------------- Voice Search -------------------- */
+function startVoiceSearch(){
+  if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){
+    alert("Not supported");
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const rec = new SR();
+  rec.lang="en-US";
+  rec.onresult = e=>{
+    const t=e.results[0][0].transcript;
+    document.getElementById('search').value=t;
+    filterPlants();
+  };
+  rec.start();
+}
+
+/* -------------------- Rain & Butterflies -------------------- */
+function launchFloatingElements(){
+  const cont=document.getElementById('floatingContainer');
+  for(let i=0;i<4;i++){
+    const b=document.createElement('img');
+    b.src="https://i.ibb.co/0Qd0Q3W/butterfly.png";
+    b.className="butterfly";
+    b.style.left=(10+i*20)+"%";
+    b.style.top=(30+i*10)+"%";
+    cont.appendChild(b);
+  }
+}
+
+function toggleButterflies(){
+  butterfliesEnabled=!butterfliesEnabled;
+  document.querySelectorAll('.butterfly').forEach(b=>{
+    b.style.display = butterfliesEnabled ? "block" : "none";
+  });
+}
+
+let rainInterval=null;
+function toggleRain(){
+  rainEnabled=!rainEnabled;
+  if(rainEnabled) startRain();
+  else stopRain();
+}
+
+function startRain(){
+  const cont=document.getElementById('floatingContainer');
+  rainInterval=setInterval(()=>{
+    const d=document.createElement('div');
+    d.className="raindrop";
+    d.style.left=Math.random()*100+"%";
+    d.style.animationDuration=(1.2+Math.random()*1.6)+"s";
+    cont.appendChild(d);
+    setTimeout(()=>d.remove(),2500);
+  },120);
+}
+
+function stopRain(){
+  clearInterval(rainInterval);
+  document.querySelectorAll('.raindrop').forEach(d=>d.remove());
+}
+
+/* -------------------- Chatbot -------------------- */
+function toggleChat(){
+  const win=document.getElementById('chatWindow');
+  win.style.display = win.style.display==="block" ? "none" : "block";
+}
+
+function sendChat(){
+  const input=document.getElementById('chatText');
+  const q=input.value.trim();
+  if(!q) return;
+
+  addChat("user",q);
+  input.value="";
+
+  setTimeout(()=>{
+    const ans = chatbotAnswer(q);
+    addChat("bot",ans);
+  },500);
+}
+
+function addChat(side,text){
+  let area=document.getElementById('chatArea');
+  const div=document.createElement('div');
+  div.style.margin="8px";
+  div.style.padding="8px";
+  div.style.borderRadius="8px";
+
+  if(side==="user"){
+    div.style.textAlign="right";
+    div.style.background="rgba(0,0,0,0.05)";
+  } else {
+    div.style.textAlign="left";
+    div.style.background="rgba(46,125,50,0.12)";
+    speakText(text);
+  }
+
+  div.innerText=text;
+  area.appendChild(div);
+  area.scrollTop=area.scrollHeight;
+}
+
+function chatbotAnswer(q){
+  q=q.toLowerCase();
+  for(const p of plants){
+    if(q.includes(p.name.toLowerCase()))
+      return `${p.name}: ${p.description} Uses: ${p.uses}.`;
+  }
+  if(q.includes("hello") || q.includes("hi"))
+    return "Hello! Ask about any plant here.";
+  return "Sorry, I don't know that. Try asking about a plant.";
+}
+
+/* -------------------- Open All Pages -------------------- */
+function openAllPages(){
+  plants.forEach((p)=>{
+    const w=window.open("","_blank");
+    w.document.write(`
+      <h1>${p.name}</h1>
+      <img src="${p.image}" style="max-width:80%">
+      <p>${p.description}</p>
+      <iframe width="560" height="315" src="${p.video}" allowfullscreen></iframe>
+    `);
+  });
+}
+
+</script>
+
+</body>
+</html>
